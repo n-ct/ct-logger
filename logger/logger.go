@@ -16,18 +16,26 @@ import (
 	ctca "github.com/n-ct/ct-certificate-authority"
 )
 
+const (
+	GetLogSRDWithRevDataPath =	"/ct/v1/get-log-srd-with-rev-data"
+	PostLogSRDWithRevDataPath = "/ct/v1/post-log-srd-with-rev-data"
+)
+
 //type to hold data and functionality of a Relying Party
 type Logger struct {
-	LogSRDWithRevData	*mtr.SRDWithRevData
-	CurrentCRV			ba.BitArray
-	Port 				string
-	Address				string
-	LogID				string
-	Signer 				*signature.Signer
+	//map to store the LogSRDWithRevData structs, map[CA ID][Revocation Type]
+	LogSRDWithRevDataMap	map[string] map[string] *mtr.SRDWithRevData
+	//map to store the CurrentCRV as a bitarray, map[CA ID][Revocation Type]
+	CurrentCRVMap			map[string] map[string] ba.BitArray
+	Port 					string
+	Address					string
+	LogID					string
+	Signer 					*signature.Signer
 }
 
 type LoggerConfig struct {
 	LogID	string `json:"LogID"`
+	PrivKey	string `json:"private_key"`
 }
 
 func parseLoggerConfig(fileName string) (*LoggerConfig, error){
@@ -63,7 +71,7 @@ func NewLogger(logListName, configName string) (*Logger, error){
 	}
 	URL = URL[0:strings.LastIndex(URL, "/")] //remove everything after the last '/'
 
-	signer,err := signature.NewSigner("privatekey?")
+	signer,err := signature.NewSigner(config.PrivKey)
 	if err != nil {
 		return nil, fmt.Errorf("error creating signer for logger: %v", err)
 	}
@@ -84,28 +92,37 @@ func (this *Logger) OnPostLogSRDWithRevData(res http.ResponseWriter, req *http.R
 		http.Error(res, fmt.Sprintf("Invalid data sent via post: %v", err), http.StatusBadRequest) // if there is an eror report and abort
 		return;
 	}
-	newSRVWithRevData, err := deconstructSRDWithRevData(&data) //cast the CTObject to a SRVWithRevData
+	newSRD, err := data.DeconstructSRD() //cast the CTObject to a SRD
 	if err != nil {
 		http.Error(res, fmt.Sprintf("Invalid data sent via post: %v", err), http.StatusBadRequest) // if there is an eror report and abort
 		return;
 	}
-	err = ca.VerifySRDSignature(&newSRVWithRevData.SRD, this.LogID) //verify the signature on the object
+	newRevData, err := data.DeconstructRevData() //cast the CTObject to a RevData
+	if err != nil {
+		http.Error(res, fmt.Sprintf("Invalid data sent via post: %v", err), http.StatusBadRequest) // if there is an eror report and abort
+		return;
+	}
+	err = ca.VerifySRDSignature(newSRD, this.LogID) //verify the signature on the object
 	if err != nil {
 		http.Error(res, fmt.Sprintf("Invalid signature: %v", err), http.StatusBadRequest) // if there is an eror report and abort
 		return;
 	}
 
-	deltaCRV, err := ctca.DecompressCRV(newSRVWithRevData.RevData.CRVDelta) //decompress the delta CRV
+	deltaCRV, err := ctca.DecompressCRV(newRevData.CRVDelta) //decompress the delta CRV
 	if err != nil {
 		http.Error(res, fmt.Sprintf("Invalid compression on delta CRV: %v", err), http.StatusBadRequest) // if there is an eror report and abort
 		return;
 	}
 
-	if this.CurrentCRV == nil { //if this is the first post request made
-		this.CurrentCRV = ba.NewBitArray((*deltaCRV).Capacity()) // create a new bit array the same size as the deltaCRV
+
+	if this.CurrentCRVMap == nil { //if this is the first post request made
+		this.CurrentCRVMap = make(map[string]map[string] ba.BitArray)
+		this.CurrentCRVMap[newSRD.EntityID][newRevData.RevocationType] = ba.NewBitArray((*deltaCRV).Capacity()) // create a new bit array the same size as the deltaCRV
 	}
 
-	NewCRV := ctca.ApplyCRVDeltaToCRV(&this.CurrentCRV, deltaCRV) //apply the delta crv to the crv
+	currentCRV := this.CurrentCRVMap[newSRD.EntityID][newRevData.RevocationType] //get the current CRV, with the current rev type for the requesting ca
+
+	NewCRV := ctca.ApplyCRVDeltaToCRV(&currentCRV, deltaCRV) //apply the delta crv to the crv
 
 	compCRV, err := ctca.CompressCRV(NewCRV) //compress and hash the new CRV to make sure it is consistant
 	crvHash, _, err := signature.GenerateHash(tls.SHA256, compCRV)
@@ -114,16 +131,16 @@ func (this *Logger) OnPostLogSRDWithRevData(res http.ResponseWriter, req *http.R
 		return;
 	}
 
-	if bytes.Compare(newSRVWithRevData.SRD.RevDigest.CRVHash, crvHash) == 0 { //if delta CRV is consistant
-		this.CurrentCRV = *NewCRV //update the curr CRV
+	if bytes.Compare(newSRD.RevDigest.CRVHash, crvHash) == 0 { //if delta CRV is consistant
+		this.CurrentCRVMap[newSRD.EntityID][newRevData.RevocationType] = *NewCRV //update the curr CRV
 	} else {
 		http.Error(res, fmt.Sprintf("Inconsistant delta CRV: %v", err), http.StatusBadRequest) // if there is an eror report and abort
 		return;
 	}
-	//update the SRDWithRevData
-	this.LogSRDWithRevData, err = ca.CreateSRDWithRevData(
-		&this.CurrentCRV, deltaCRV,
-		newSRVWithRevData.SRD.RevDigest.Timestamp,
+	//update the SRDWithRevDataMap
+	this.LogSRDWithRevDataMap[newSRD.EntityID][newRevData.RevocationType], err = ca.CreateSRDWithRevData(
+		&currentCRV, deltaCRV,
+		newSRD.RevDigest.Timestamp,
 		this.LogID,
 		tls.SHA256,
 		this.Signer,
@@ -133,23 +150,32 @@ func (this *Logger) OnPostLogSRDWithRevData(res http.ResponseWriter, req *http.R
 		http.Error(res, fmt.Sprintf("Error Updating SRDWithRevData: %v", err), http.StatusBadRequest) // if there is an eror report and abort
 		return;
 	}
+	if this.LogSRDWithRevDataMap == nil {
+		this.LogSRDWithRevDataMap = make(map[string]map[string] *mtr.SRDWithRevData)
+	}
+	this.LogSRDWithRevDataMap[newSRD.EntityID][newRevData.RevocationType].RevData.RevocationType = "Let's-Revoke" //update the revocation type
 }
 
 func (this *Logger) OnGetLogSRDWithRevData(res http.ResponseWriter, req *http.Request) {
-	CTObject, err := mtr.ConstructCTObject(this.LogSRDWithRevData)
-	if err == nil {
-		var jsonStr, err = json.Marshal(CTObject);
-		if err == nil {
-			res.Write(jsonStr)
-		}
+	if this.LogSRDWithRevDataMap == nil { //if the SRDmap hasnt been created yet report that to the caller and return
+		res.Write([]byte("SRDWithRevData is still being created"))
+		return
 	}
-}
 
-func deconstructSRDWithRevData(c *mtr.CTObject) (*mtr.SRDWithRevData, error) {
-	var srd_rev mtr.SRDWithRevData
-	err := json.Unmarshal(c.Blob, &srd_rev)
-	if err != nil {
-		return nil, fmt.Errorf("error deconstructing SRDWithRevData from %s CTObject: %v", c.TypeID, err)
+	var CTObjects = []mtr.CTObject{} //create an empty slice to hold ctobjects
+
+	for _, element := range this.LogSRDWithRevDataMap {
+		LogSRDWithRevData := element["Let's-Revoke"]
+		CTObject, err := mtr.ConstructCTObject(LogSRDWithRevData)
+		if err != nil {
+			http.Error(res, fmt.Sprintf("Error Generating LogSRD objects: %v", err), http.StatusBadRequest) // if there is an eror report and abort
+			return;
+		}
+		CTObjects = append(CTObjects, *CTObject)
 	}
-	return &srd_rev, nil
+
+	var jsonStr, err = json.Marshal(CTObjects);
+	if err == nil {
+		res.Write(jsonStr)
+	}
 }

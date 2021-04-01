@@ -13,7 +13,6 @@ import (
 	"github.com/golang/glog"
 
 	lgr "ct-logger/logger"
-	ctca "github.com/n-ct/ct-certificate-authority"
 )
 
 func main(){
@@ -67,8 +66,8 @@ func serverSetup(l *lgr.Logger) *http.Server{
 // Sets up the handler and the various path handle functions
 func handlerSetup(l *lgr.Logger) (*http.ServeMux) {
 	serveMux := http.NewServeMux()
-	serveMux.HandleFunc(ctca.PostLogSRDWithRevDataPath, l.OnPostLogSRDWithRevData)
-	serveMux.HandleFunc(ctca.GetRevocationStatusPath, l.OnGetLogSRDWithRevData)
+	serveMux.HandleFunc(lgr.PostLogSRDWithRevDataPath, l.OnPostLogSRDWithRevData)
+	serveMux.HandleFunc(lgr.GetLogSRDWithRevDataPath, l.OnGetLogSRDWithRevData)
 
 	// Return a 200 on the root so clients can easily check if server is up
 	serveMux.HandleFunc("/", func(resp http.ResponseWriter, req *http.Request) {
