@@ -1,4 +1,4 @@
 # ct-logger
 
 Usage:
-run main/server -loglist=<path to loglist file> -config=<path to config file>
+run main/server -loglist=&lt;path to loglist file&gt; -config=&lt;path to config file&gt;
