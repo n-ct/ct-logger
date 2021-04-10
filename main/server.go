@@ -14,10 +14,10 @@ import (
 
 	lgr "ct-logger/logger"
 )
-
+//server -config C:\Users\Eli\go\src\ct-logger\logger\config.json -logtostderr=t
 func main(){
-	configName := flag.String("config", "logger/config.json", "File containing logger config file")
-	logListName := flag.String("loglist", "logger/log_list.json", "File containing LogList")
+	configName := flag.String("config", "..logger/config.json", "File containing logger config file")
+	caListName := flag.String("ca_list", "..logger/ca_list.json", "File containing ca list file")
 
 	flag.Parse()
 	defer glog.Flush()
@@ -26,7 +26,7 @@ func main(){
 	signal.Notify(stop, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 
 	// Create a logger instance
-	logger, err := lgr.NewLogger(*logListName, *configName)
+	logger, err := lgr.NewLogger(*configName, *caListName)
 	if err != nil {
 		fmt.Printf("Error creating logger: %v", err)	// Only for testing purposes
 		glog.Fatalf("Error creating logger: %v", err)
@@ -68,6 +68,7 @@ func handlerSetup(l *lgr.Logger) (*http.ServeMux) {
 	serveMux := http.NewServeMux()
 	serveMux.HandleFunc(lgr.PostLogSRDWithRevDataPath, l.OnPostLogSRDWithRevData)
 	serveMux.HandleFunc(lgr.GetLogSRDWithRevDataPath, l.OnGetLogSRDWithRevData)
+	serveMux.HandleFunc(lgr.RevokeAndProduceSRDPath, l.OnRevokeAndProduceSRD)
 
 	// Return a 200 on the root so clients can easily check if server is up
 	serveMux.HandleFunc("/", func(resp http.ResponseWriter, req *http.Request) {
