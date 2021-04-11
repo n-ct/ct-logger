@@ -12,12 +12,14 @@ import (
 
 	"github.com/golang/glog"
 
-	lgr "ct-logger/logger"
+	lgr "github.com/n-ct/ct-logger/logger"
 )
 //server -config C:\Users\Eli\go\src\ct-logger\logger\config.json -logtostderr=t
 func main(){
-	configName := flag.String("config", "..logger/config.json", "File containing logger config file")
-	caListName := flag.String("ca_list", "..logger/ca_list.json", "File containing ca list file")
+	//configName := flag.String("config", "..logger/config.json", "File containing logger config file")
+	//caListName := flag.String("ca_list", "..logger/ca_list.json", "File containing ca list file")
+	configName := flag.String("config", "logger/config.json", "File containing logger config file")
+	caListName := flag.String("ca_list", "logger/ca_list.json", "File containing ca list file")
 
 	flag.Parse()
 	defer glog.Flush()

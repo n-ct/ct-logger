@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"bytes"
-	"net/http"
+	//"net/http"
 	"time"
 	mtr "github.com/n-ct/ct-monitor"
 	ctca "github.com/n-ct/ct-certificate-authority"
@@ -17,8 +17,10 @@ import (
 //"ca_id": "LeYXK29QzQV9RxvgMw+hnOeyZV85A6a5quOLltev9H0=",
 //"ca_key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEmFk6QT48Ts4oxSkBPM4mQ/mnWICKVmZUP6urQVBH0vhDzJVYHc2ShvF2KjWzorVu2C+tY6lIU+61iiPLsGvZXw==",
 const (
-	config_filename string = "config.json"
-	caList_filename string = "C:\\Users\\Eli\\go\\src\\ct-logger\\logger\\ca_list.json"
+	//config_filename string = "config.json"
+	config_filename string = "../testdata/config.json"
+	//caList_filename string = "C:\\Users\\Eli\\go\\src\\ct-logger\\logger\\ca_list.json"
+	caList_filename string = "../testdata/ca_list.json"
 	ca_id			string = "LeYXK29QzQV9RxvgMw+hnOeyZV85A6a5quOLltev9H0="
 	private_key		string = "MHcCAQEEIOWK47/9gxKjcpTe8UhL4PyXZS1lPcnqChRvlw/Jpnh0oAoGCCqGSM49AwEHoUQDQgAEmFk6QT48Ts4oxSkBPM4mQ/mnWICKVmZUP6urQVBH0vhDzJVYHc2ShvF2KjWzorVu2C+tY6lIU+61iiPLsGvZXw=="
 
@@ -62,12 +64,7 @@ func mustUpdateLogSRDWithRevData(t *testing.T, logger *Logger, crv, deltaCRV *bi
 
 	srdWithRevData, err := ca.CreateSRDWithRevData(crv, deltaCRV, timestamp, ca_id, tls.SHA256, signer)
 
-	obj, err := mtr.ConstructCTObject(srdWithRevData)
-	if err != nil {
-		return fmt.Errorf("failed to create CTObject: %v", err)
-	}
-
-	err = logger.UpdateLogSRDWithRevData(obj)
+	err = logger.UpdateLogSRDWithRevData(srdWithRevData)
 
 	if err != nil {
 		return fmt.Errorf("%v", err)

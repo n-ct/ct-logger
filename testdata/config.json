@@ -1,0 +1,20 @@
+{
+	"private_key": "MHcCAQEEIOWK47/9gxKjcpTe8UhL4PyXZS1lPcnqChRvlw/Jpnh0oAoGCCqGSM49AwEHoUQDQgAEmFk6QT48Ts4oxSkBPM4mQ/mnWICKVmZUP6urQVBH0vhDzJVYHc2ShvF2KjWzorVu2C+tY6lIU+61iiPLsGvZXw==",
+
+	"description": "Google 'Argon2020' log",
+	"log_id": "sh4FzIuizYogTodm+Su5iiUgZ2va+nDnsklTLe+LkF4=",
+	"key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE6Tx2p1yKY4015NyIYvdrk36es0uAc1zA4PQ+TGRY+3ZjUTIYY9Wyu+3q/147JG4vNVKLtDWarZwVqGkg6lAYzA==",
+	"url": "https://ct.googleapis.com/logs/argon2020/",
+	"mmd": 86400,
+	"state": {
+		"usable": {
+		  "timestamp": "2018-06-15T02:30:13Z"
+		}
+	},
+	"temporal_interval": {
+		"start_inclusive": "2020-01-01T00:00:00Z",
+		"end_exclusive": "2021-01-01T00:00:00Z"
+	}
+
+
+}
