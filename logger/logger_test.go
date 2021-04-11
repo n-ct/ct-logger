@@ -23,7 +23,6 @@ const (
 	caList_filename string = "../testdata/ca_list.json"
 	ca_id			string = "LeYXK29QzQV9RxvgMw+hnOeyZV85A6a5quOLltev9H0="
 	private_key		string = "MHcCAQEEIOWK47/9gxKjcpTe8UhL4PyXZS1lPcnqChRvlw/Jpnh0oAoGCCqGSM49AwEHoUQDQgAEmFk6QT48Ts4oxSkBPM4mQ/mnWICKVmZUP6urQVBH0vhDzJVYHc2ShvF2KjWzorVu2C+tY6lIU+61iiPLsGvZXw=="
-
 )
 
 //https://localhost:6966/ct/v1/post-log-srd-with-rev-data

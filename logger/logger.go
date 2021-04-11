@@ -328,9 +328,14 @@ func (this *Logger) OnRevokeAndProduceSRD(res http.ResponseWriter, req *http.Req
 		http.Error(res, fmt.Sprintf("failed to create SRD in Logger: %v", err), http.StatusBadRequest) // if there is an eror report and abort
 		return;
 	}
-	newLogSRDBytes, err := json.Marshal(newLogSRD)	// Just use serialize method somewhere else
+	srdCTObject, err := mtr.ConstructCTObject(newLogSRD)
+	if err != nil {
+		http.Error(res, fmt.Sprintf("failed to construct CTObject of SRD in Logger: %v", err), http.StatusBadRequest) // if there is an eror report and abort
+		return;
+	}
+	newCTObjSRDBytes, err := json.Marshal(*srdCTObject)	// Just use serialize method somewhere else
 
-	res.Write(newLogSRDBytes)
+	res.Write(newCTObjSRDBytes)
 }
 
 func (this *Logger) GetRandomCAInfoFromCaList() (*el.CAInfo){
