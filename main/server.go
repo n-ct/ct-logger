@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"flag"
 	"context"
 	"time"
@@ -14,7 +13,6 @@ import (
 
 	lgr "github.com/n-ct/ct-logger/logger"
 )
-//server -config C:\Users\Eli\go\src\ct-logger\logger\config.json -logtostderr=t
 func main(){
 	//configName := flag.String("config", "..logger/config.json", "File containing logger config file")
 	//caListName := flag.String("ca_list", "..logger/ca_list.json", "File containing ca list file")
@@ -36,7 +34,7 @@ func main(){
 		glog.Flush()
 		os.Exit(-1)
 	}
-	glog.Infof("Starting Logger at %v:%v", logger.Address, logger.Port)
+	glog.Infof("Starting Logger at %v", logger.Address)
 
 	// Create http.Server instance for the CA
 	server := serverSetup(logger)
@@ -52,7 +50,7 @@ func main(){
 func serverSetup(l *lgr.Logger) *http.Server{
 	serveMux := handlerSetup(l)
 	server := &http.Server {
-		Addr: fmt.Sprintf("%v:%v", l.Address, l.Port),
+		Addr: l.Address,
 		Handler: serveMux,
 	}
 

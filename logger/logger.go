@@ -31,7 +31,6 @@ type Logger struct {
 	LogSRDWithRevDataMap	map[string] map[string] *mtr.SRDWithRevData
 	//map to store the CurrentCRV as a bitarray, map[CA ID][Revocation Type]
 	CurrentCRVMap			map[string] map[string] ba.BitArray
-	Port 					string
 	Address					string
 	LogID					string
 	Signer 					*signature.Signer
@@ -43,7 +42,7 @@ type Logger struct {
 type LoggerConfig struct {
 	LogID	string		`json:"log_id"`
 	PrivKey	string		`json:"private_key"`
-	CAIDs   []string	`ca_ids`
+	CAIDs   []string	`json: ca_ids`
 }
 
 func parseLoggerConfig(fileName string) (*LoggerConfig, error){
@@ -68,7 +67,6 @@ func parseLoggerConfig(fileName string) (*LoggerConfig, error){
 
 //creates and returns a new Relying party type
 func NewLogger(configName, caListName, logListName string) (*Logger, error){
-	glog.Infoln("AAAAAAAAAAAAAAAAAAAA")
 	caList, err := el.NewCAList(caListName)
 	if err != nil {
 		return nil, err
@@ -90,18 +88,25 @@ func NewLogger(configName, caListName, logListName string) (*Logger, error){
 	}
 
 	URL := logInfo.URL
+	if strings.Index(URL, "http://") == 0 {
+		URL = URL[7:len(URL)-1]
+	}
+	if strings.Index(URL, "https://") == 0 {
+		URL = URL[8:len(URL)-1]
+	}
 	if URL[len(URL)-1] == '/' { //if the last char of the url is a '/' remove it
 		URL = URL[0:len(URL)-1]
 	}
-	URL = URL[0:strings.LastIndex(URL, "/")] //remove everything after the last '/'
-
+	i := strings.Index(URL, ":")
+	if i >= 0 {
+		URL = fmt.Sprintf("%v:6966", URL[0:i])
+	}
 	signer,err := signature.NewSigner(config.PrivKey)
 	if err != nil {
 		return nil, fmt.Errorf("error creating signer for logger: %v", err)
 	}
 
 	logger := &Logger{
-		Port:		"6966",
 		Address:	URL,
 		LogID: 		config.LogID,
 		Signer:		signer,
