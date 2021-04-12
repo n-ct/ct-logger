@@ -17,12 +17,11 @@ import (
 //"ca_id": "LeYXK29QzQV9RxvgMw+hnOeyZV85A6a5quOLltev9H0=",
 //"ca_key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEmFk6QT48Ts4oxSkBPM4mQ/mnWICKVmZUP6urQVBH0vhDzJVYHc2ShvF2KjWzorVu2C+tY6lIU+61iiPLsGvZXw==",
 const (
-	//config_filename string = "config.json"
-	config_filename string = "../testdata/config.json"
-	//caList_filename string = "C:\\Users\\Eli\\go\\src\\ct-logger\\logger\\ca_list.json"
-	caList_filename string = "../testdata/ca_list.json"
-	ca_id			string = "LeYXK29QzQV9RxvgMw+hnOeyZV85A6a5quOLltev9H0="
-	private_key		string = "MHcCAQEEIOWK47/9gxKjcpTe8UhL4PyXZS1lPcnqChRvlw/Jpnh0oAoGCCqGSM49AwEHoUQDQgAEmFk6QT48Ts4oxSkBPM4mQ/mnWICKVmZUP6urQVBH0vhDzJVYHc2ShvF2KjWzorVu2C+tY6lIU+61iiPLsGvZXw=="
+	config_filename  string = "../testdata/config.json"
+	caList_filename  string = "../testdata/ca_list.json"
+	logList_filename string = "../testdata/log_list.json"
+	ca_id			 string = "LeYXK29QzQV9RxvgMw+hnOeyZV85A6a5quOLltev9H0="
+	private_key		 string = "MHcCAQEEIOWK47/9gxKjcpTe8UhL4PyXZS1lPcnqChRvlw/Jpnh0oAoGCCqGSM49AwEHoUQDQgAEmFk6QT48Ts4oxSkBPM4mQ/mnWICKVmZUP6urQVBH0vhDzJVYHc2ShvF2KjWzorVu2C+tY6lIU+61iiPLsGvZXw=="
 )
 
 //https://localhost:6966/ct/v1/post-log-srd-with-rev-data
@@ -30,7 +29,7 @@ const (
 //function that returns a new logger type, or an error if creation fails
 func mustCreateLogger(t *testing.T) (*Logger, error){
 	t.Helper()
-	logger, err := NewLogger(config_filename, caList_filename)
+	logger, err := NewLogger(config_filename, caList_filename, logList_filename)
 	return logger, err
 }
 

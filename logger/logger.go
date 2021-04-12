@@ -35,18 +35,17 @@ type Logger struct {
 	LogID					string
 	Signer 					*signature.Signer
 	PublicKey				string
-	CAList 					*el.CAList
+	CAList 					*el.CAList //entitylist that stores all data about CAs
+	CAIDs   				[]string //list of CA ids used to index CAList
 }
 
 type LoggerConfig struct {
-	LogID	string `json:"log_id"`
-	PrivKey	string `json:"private_key"`
-	URL		string `json:"url"`
-	Key 	string `json:"key"`
+	LogID	string		`json:"log_id"`
+	PrivKey	string		`json:"private_key"`
+	CAIDs   []string	`ca_ids`
 }
 
 func parseLoggerConfig(fileName string) (*LoggerConfig, error){
-
 	jsonFile, err := os.Open(fileName)
 	defer jsonFile.Close()
 	if err != nil {
@@ -67,8 +66,13 @@ func parseLoggerConfig(fileName string) (*LoggerConfig, error){
 }
 
 //creates and returns a new Relying party type
-func NewLogger(configName, caListName string) (*Logger, error){
+func NewLogger(configName, caListName, logListName string) (*Logger, error){
 	caList, err := el.NewCAList(caListName)
+	if err != nil {
+		return nil, err
+	}
+
+	logList, err := el.NewLogList(logListName)
 	if err != nil {
 		return nil, err
 	}
@@ -78,7 +82,12 @@ func NewLogger(configName, caListName string) (*Logger, error){
 		return nil, err
 	}
 
-	URL := config.URL
+	logInfo := logList.FindLogByLogID(config.LogID)
+	if (logInfo == nil) {
+		return nil, fmt.Errorf("Logger with id: [%v] not found in log list at: [%v]", config.LogID, logListName)
+	}
+
+	URL := logInfo.URL
 	if URL[len(URL)-1] == '/' { //if the last char of the url is a '/' remove it
 		URL = URL[0:len(URL)-1]
 	}
@@ -91,11 +100,12 @@ func NewLogger(configName, caListName string) (*Logger, error){
 
 	logger := &Logger{
 		Port:		"6966",
-		Address:	"localhost", //set to local host for testing, should be set to URL
+		Address:	URL,
 		LogID: 		config.LogID,
 		Signer:		signer,
-		PublicKey:	config.Key,
+		PublicKey:	logInfo.Key,
 		CAList:		caList,
+		CAIDs:		config.CAIDs,
 	}
 	return logger, nil
 }
@@ -339,14 +349,6 @@ func (this *Logger) OnRevokeAndProduceSRD(res http.ResponseWriter, req *http.Req
 }
 
 func (this *Logger) GetRandomCAInfoFromCaList() (*el.CAInfo){
-	ops := this.CAList.CAOperators
-	if len(ops) > 0 {
-		opIndex := rand.Intn(len(ops))
-		cas := ops[opIndex].CAs
-		if len(cas) > 0 {
-		 	caIndex := rand.Intn(len(cas))
-		 	return cas[caIndex]
-		}
-	}
-	return nil;
+	i := rand.Intn(len(this.CAIDs))
+	return this.CAList.FindCAByCAID(this.CAIDs[i]);
 }

@@ -20,6 +20,7 @@ func main(){
 	//caListName := flag.String("ca_list", "..logger/ca_list.json", "File containing ca list file")
 	configName := flag.String("config", "logger/config.json", "File containing logger config file")
 	caListName := flag.String("ca_list", "logger/ca_list.json", "File containing ca list file")
+	logListName := flag.String("log_list", "logger/log_list.json", "File containing log list file")
 
 	flag.Parse()
 	defer glog.Flush()
@@ -28,9 +29,9 @@ func main(){
 	signal.Notify(stop, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 
 	// Create a logger instance
-	logger, err := lgr.NewLogger(*configName, *caListName)
+	logger, err := lgr.NewLogger(*configName, *caListName, *logListName)
 	if err != nil {
-		fmt.Printf("Error creating logger: %v", err)	// Only for testing purposes
+		// fmt.Printf("Error creating logger: %v", err)	// Only for testing purposes
 		glog.Fatalf("Error creating logger: %v", err)
 		glog.Flush()
 		os.Exit(-1)
