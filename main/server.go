@@ -17,8 +17,8 @@ func main(){
 	//configName := flag.String("config", "..logger/config.json", "File containing logger config file")
 	//caListName := flag.String("ca_list", "..logger/ca_list.json", "File containing ca list file")
 	configName := flag.String("config", "logger/config.json", "File containing logger config file")
-	caListName := flag.String("ca_list", "logger/ca_list.json", "File containing ca list file")
-	logListName := flag.String("log_list", "logger/log_list.json", "File containing log list file")
+	caListName := flag.String("calist", "logger/ca_list.json", "File containing ca list file")
+	logListName := flag.String("loglist", "logger/log_list.json", "File containing log list file")
 
 	flag.Parse()
 	defer glog.Flush()
