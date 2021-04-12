@@ -9,6 +9,7 @@ import (
 	"math/rand"
 	"os"
 	"io/ioutil"
+	"github.com/golang/glog"
 	ba "github.com/Workiva/go-datastructures/bitarray"
 	mtr "github.com/n-ct/ct-monitor"
 	el "github.com/n-ct/ct-monitor/entitylist"
@@ -67,6 +68,7 @@ func parseLoggerConfig(fileName string) (*LoggerConfig, error){
 
 //creates and returns a new Relying party type
 func NewLogger(configName, caListName, logListName string) (*Logger, error){
+	glog.Infoln("AAAAAAAAAAAAAAAAAAAA")
 	caList, err := el.NewCAList(caListName)
 	if err != nil {
 		return nil, err
@@ -257,6 +259,7 @@ func (this *Logger) UpdateLogSRDWithRevData(data *mtr.SRDWithRevData) error {
 */
 
 func (this *Logger) OnPostLogSRDWithRevData(res http.ResponseWriter, req *http.Request) {
+	glog.Infof("new PostLogSRDWithRevData request received")
 	data := mtr.SRDWithRevData{}; //create an empty CTObject
 	err := json.NewDecoder(req.Body).Decode(&data); // fill that struct using the JSON encoded struct send via the Post
 	if err != nil {
@@ -294,6 +297,7 @@ func (this *Logger) GetAllLogSrdWithRevDataAsJSONBytes() ([]byte,error) {
 }
 
 func (this *Logger) OnGetLogSRDWithRevData(res http.ResponseWriter, req *http.Request) {
+	glog.Infof("new GetLogSRDWithRevData request received")
 	jsonBytes, err := this.GetAllLogSrdWithRevDataAsJSONBytes()
 	if err != nil {
 		http.Error(res, fmt.Sprintf("%v", err), http.StatusBadRequest) // if there is an eror report and abort
@@ -303,6 +307,7 @@ func (this *Logger) OnGetLogSRDWithRevData(res http.ResponseWriter, req *http.Re
 }
 
 func (this *Logger) OnRevokeAndProduceSRD(res http.ResponseWriter, req *http.Request) {
+	glog.Infof("new RevokeAndProduceSRD request received")
 	data := ctca.RevokeAndProduceSRDRequest{}; //create an empty CTObject
 	err := json.NewDecoder(req.Body).Decode(&data); // fill that struct using the JSON encoded struct send via the Post
 	if err != nil {
