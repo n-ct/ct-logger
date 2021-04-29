@@ -42,7 +42,7 @@ type Logger struct {
 type LoggerConfig struct {
 	LogID	string		`json:"log_id"`
 	PrivKey	string		`json:"private_key"`
-	CAIDs   []string	`json: ca_ids`
+	CAIDs   []string	`json:"ca_ids"`
 }
 
 func parseLoggerConfig(fileName string) (*LoggerConfig, error){
@@ -320,6 +320,7 @@ func (this *Logger) OnRevokeAndProduceSRD(res http.ResponseWriter, req *http.Req
 		return;
 	}
 
+	glog.Infof("randomCAINfo")
 	ca := this.GetRandomCAInfoFromCaList()
 	if err != nil {
 		http.Error(res, fmt.Sprintf("No CAs to forward message to"), http.StatusBadRequest) // if there is an eror report and abort
@@ -327,6 +328,7 @@ func (this *Logger) OnRevokeAndProduceSRD(res http.ResponseWriter, req *http.Req
 	}
 
 	//fmt.Println(data)
+	glog.Infof("start sending to ca")
 	jsonBytes, err := json.Marshal(data)	// Just use serialize method somewhere else
 	caReq, err := http.NewRequest("GET", fmt.Sprintf("%v%v", ca.CAURL, RevokeAndProduceSRDPath), bytes.NewBuffer(jsonBytes))
 	client := &http.Client{};
